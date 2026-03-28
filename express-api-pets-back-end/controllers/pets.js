@@ -20,7 +20,18 @@ const create = async (req, res) => {
   }
 };
 
+const remove = async (req, res) => {
+  const { petId } = req.params;
+  try {
+    await Pet.findByIdAndDelete(petId);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ err });
+  }
+};
+
 router.get("/", index);
 router.post("/", create);
+router.delete("/:petId", remove);
 
 module.exports = router;
