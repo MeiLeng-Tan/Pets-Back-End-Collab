@@ -3,8 +3,13 @@ const Pet = require("../models/pet.js");
 const express = require("express");
 const router = express.Router();
 
-const index = (req, res) => {
-  res.status(201).json({ msg: "all" });
+const index = async (req, res) => {
+  try {
+    const foundPets = await Pet.find();
+    res.status(200).json(foundPets);
+  } catch (err) {
+    res.status(500).json({ err });
+  }
 };
 
 const create = async (req, res) => {
@@ -20,18 +25,28 @@ const create = async (req, res) => {
   }
 };
 
-const remove = async (req, res) => {
-  const { petId } = req.params;
+const update = async (req, res) => {
   try {
-    await Pet.findByIdAndDelete(petId);
-    res.status(204).send();
+    const updatedPet = await Pet.findByIdAndUpdate(req.params.petId, req.body, {returnDocument: "after"});
+    // Add a check for a not found pet
+    if (!updatedPet) {
+      res.status(404);
+      throw new Error('Pet not found.');
+    }
+    // Add a JSON response with the updated pet
+    res.status(200).json(updatedPet);
   } catch (err) {
-    res.status(500).json({ err });
+    // Add code for errors
+    if (res.statusCode === 404) {
+      res.json({ err: err.message });
+    } else {
+      res.status(500).json({ err: err.message });
+    }
   }
 };
 
 router.get("/", index);
 router.post("/", create);
-router.delete("/:petId", remove);
+router.put("/:petId", update);
 
 module.exports = router;
